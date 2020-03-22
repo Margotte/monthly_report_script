@@ -36,7 +36,9 @@ DATE = Date.new(year, month, 1)
 # ---------------------------------------------------
 # ::mkdir returns 0
 
-Dir.mkdir("../#{DATE.strftime("%Y-%m")}")
+unless Dir.exist?("../#{DATE.strftime("%Y-%m")}")
+  Dir.mkdir("../#{DATE.strftime("%Y-%m")}")
+end
 
 # ---------------------------------------------------
 # List of columns to be copied

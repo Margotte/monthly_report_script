@@ -4,10 +4,16 @@ end
 
 
 def add_title(dest_wksh, coach_name)
-  dest_wksh.add_cell(0, 0, "#{DATE.strftime("%Y-%b")}_#{coach_name}")
+  dest_wksh.add_cell(0, 0, "#{DATE.strftime("%Y-%m")} TECHIES LAB")
+  dest_wksh.add_cell(dest_wksh.count, 0, "Relevé mensuel des heures pour #{coach_name}")
+
+  # To be able to later on style the two first rows, create the other cells of the rows:
   (1..COLUMN_TITLES.count-1).each do |column_index|
     dest_wksh.add_cell(0, column_index, "")
+    dest_wksh.add_cell(1, column_index, "")
   end
+
+  # Blank row:
   dest_wksh.add_row(dest_wksh.count)
 end
 
@@ -56,6 +62,34 @@ def add_total_row(dest_wksh)
   currency_cell.set_number_format('[$€-80C] #.00')
 end
 
+def style_row(dest_wksh, row_number, styles = {})
+  font = styles[:font] || 'Work Sans Light'
+  font_size = styles[:font_size] || 12
+  bold = styles[:bold] || false
+  height = styles[:height] || 20
+  horizontal_align = styles[:horizontal_align] || 'left'
+  color = styles[:color]
+  wrap = styles[:wrap]
+
+  dest_wksh.change_row_font_size(row_number, font_size)
+  dest_wksh.change_row_font_name(row_number, font)
+  dest_wksh.change_row_bold(row_number, bold)
+  dest_wksh.change_row_height(row_number, height)
+  dest_wksh.change_row_horizontal_alignment(row_number, horizontal_align)
+
+  if color
+    (0..COLUMN_TITLES.count-1).each do |column_index|
+      dest_wksh.sheet_data[row_number][column_index].change_fill(color)
+    end
+  end
+
+  if wrap
+    (0..COLUMN_TITLES.count-1).each do |column_index|
+      dest_wksh.sheet_data[row_number][column_index].change_text_wrap(true)
+    end
+  end
+end
+
 def create_coach_report(coach_name, dest_wksh, origin_wksh)
 
   # Adding title of worksheet and blank row
@@ -72,44 +106,22 @@ def create_coach_report(coach_name, dest_wksh, origin_wksh)
 
   # style of each cells
   dest_wksh.count.times do |row|
-    dest_wksh.change_row_font_size(row, 12)
-    dest_wksh.change_row_height(row, 20)
-    dest_wksh.change_row_font_name(row, 'Work Sans Light')
-    dest_wksh.change_row_horizontal_alignment(row, 'center')
+    style_row(dest_wksh, row, {horizontal_align: 'center'})
   end
 
-  # style of title (first) row
-  dest_wksh.change_row_font_name(0, 'Space Mono')
-  dest_wksh.change_row_bold(0, true)
-  dest_wksh.change_row_height(0, 30)
-  dest_wksh.change_row_horizontal_alignment(0, 'left')
-
-  (0..COLUMN_TITLES.count-1).each do |column_index|
-    dest_wksh.sheet_data[0][column_index].change_fill('5c8fc1')
-  end
+  # style of title (first two) rows
+  style_row(dest_wksh, 0, {font: 'Space Mono', bold: true, height:  30, color: '5c8fc1'})
+  style_row(dest_wksh, 1, {font: 'Space Mono', bold: true, color: '5c8fc1'})
 
   # style of header (third) row
-  dest_wksh.change_row_height(2, 35)
-  dest_wksh.change_row_bold(2, true)
-  (0..COLUMN_TITLES.count-1).each do |column_index|
-    dest_wksh.sheet_data[2][column_index].change_text_wrap(true)
-  end
+  style_row(dest_wksh, 3, { bold: true, height:  35, wrap: true, horizontal_align: 'center'})
 
   # style of TOTAL row
   last_row = dest_wksh.count - 1
-  dest_wksh.change_row_font_name(last_row, 'Space Mono')
-  dest_wksh.change_row_bold(last_row,true)
-  dest_wksh.change_row_height(last_row, 30)
-  dest_wksh.change_row_height(last_row, 30)
-  (0..COLUMN_TITLES.count-1).each do |column_index|
-    dest_wksh.sheet_data[last_row][column_index].change_fill('b9cfe4')
-  end
-  # dest_wksh.change_row_border(last_row, :top, 'medium')
+  style_row(dest_wksh, last_row, { bold: true, height:  30, color: 'b9cfe4', font: 'Space Mono', horizontal_align: 'center'})
 
-  # style of columns
-  {0 => 12, 1 => 18, 2 => 12, 3 => 15, 4 => 10, 5 => 12}.each do |column, width|
+  # width of columns
+  {0 => 12, 1 => 18, 2 => 10, 3 => 12, 4 => 9, 5 => 11}.each do |column, width|
     dest_wksh.change_column_width(column, width)
   end
 end
-
-
