@@ -2,7 +2,6 @@ def list_columns(origin_wksh)
   origin_wksh.sheet_data.rows[0].cells.reject {|cell| cell.nil? || cell.value.nil?}.map { |cell| cell.value }
 end
 
-
 def add_title(dest_wksh, title, column_count)
   dest_wksh.add_cell(0, 0, "#{DATE.strftime("%Y-%m")} TECHIES LAB")
   dest_wksh.add_cell(dest_wksh.count, 0, title)
@@ -144,18 +143,14 @@ end
 
 def create_summary(coach_wkbk, coaches)
   summary_wksh = coach_wkbk.worksheets[0]
-  column_count = 3
-  add_title(summary_wksh, "Monthly Summary", column_count)
-
-  # Month in French
-  next_row = summary_wksh.count
-  summary_wksh.add_cell(next_row, 0, "#{MONTHS_FR[DATE.month]} #{DATE.year}")
+  column_count = 4
 
   # Adding header row
   next_row = summary_wksh.count
   summary_wksh.add_cell(next_row, 0, "name")
   summary_wksh.add_cell(next_row, 1, "hours")
   summary_wksh.add_cell(next_row, 2, "fees")
+  summary_wksh.add_cell(next_row, 3, "month")
 
   # Add info
   coaches.each do |coach_name|
@@ -179,13 +174,15 @@ def create_summary(coach_wkbk, coaches)
     summary_wksh.add_cell(summary_next_row, 2, fees)
     currency_cell = summary_wksh[summary_next_row][2]
     currency_cell.set_number_format('[$€-80C] #.00')
+
+    # month
+    summary_wksh.add_cell(summary_next_row, 3, "#{MONTHS_FR[DATE.month]} #{DATE.year}")
   end
 
   style_cells(summary_wksh, column_count)
-  style_title_rows(summary_wksh, column_count)
-  style_row(summary_wksh, 4, column_count, { bold: true, height:  35, wrap: true, horizontal_align: 'center', color: 'b9cfe4'})
+  style_row(summary_wksh, 0, column_count, { bold: true, height:  35, wrap: true, horizontal_align: 'center', color: 'b9cfe4'})
 
   # width of columns
-  widths = {0 => 20, 1 => 15, 2 => 15}
+  widths = {0 => 20, 1 => 15, 2 => 15, 3 => 20}
   width_columns(summary_wksh, widths)
 end
