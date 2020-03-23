@@ -70,6 +70,7 @@ def style_row(dest_wksh, row_number, column_count, styles = {})
   horizontal_align = styles[:horizontal_align] || 'left'
   color = styles[:color]
   wrap = styles[:wrap]
+  border = styles[:border]
 
   dest_wksh.change_row_font_size(row_number, font_size)
   dest_wksh.change_row_font_name(row_number, font)
@@ -86,6 +87,13 @@ def style_row(dest_wksh, row_number, column_count, styles = {})
   if wrap
     (0..column_count-1).each do |column_index|
       dest_wksh.sheet_data[row_number][column_index].change_text_wrap(true)
+    end
+  end
+
+  if border
+    (0..column_count-1).each do |column_index|
+      dest_wksh.sheet_data[row_number][column_index].change_border(:top, 'thin')
+      dest_wksh.sheet_data[row_number][column_index].change_border_color(:top, 'b9cfe4')
     end
   end
 end
@@ -131,6 +139,11 @@ def create_coach_report(coach_name, dest_wksh, origin_wksh)
 
   # style of header (third) row
   style_row(dest_wksh, 3, column_count, { bold: true, height:  35, wrap: true, horizontal_align: 'center'})
+
+  # style data rows
+  (4..dest_wksh.count-2).each do |row|
+    style_row(dest_wksh, row, column_count, {border: true, horizontal_align: 'center'})
+  end
 
   # style of TOTAL row
   last_row = dest_wksh.count - 1
