@@ -18,7 +18,7 @@ end
 
 def create_coaches_worksheets(coaches, workbook)
   coaches.each do |coach_name|
-    coach_worksheet = workbook.add_worksheet("#{DATE.strftime("%Y-%m")}_#{coach_name}")
+    coach_worksheet = workbook.add_worksheet("#{DATE.strftime("%Y-%m")}_#{coach_name}_relevé")
   end
 end
 

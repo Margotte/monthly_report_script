@@ -3,12 +3,12 @@ def list_columns(origin_wksh)
 end
 
 
-def add_title(dest_wksh, coach_name)
+def add_title(dest_wksh, title, column_count)
   dest_wksh.add_cell(0, 0, "#{DATE.strftime("%Y-%m")} TECHIES LAB")
-  dest_wksh.add_cell(dest_wksh.count, 0, "Relevé mensuel des heures pour #{coach_name}")
+  dest_wksh.add_cell(dest_wksh.count, 0, title)
 
   # To be able to later on style the two first rows, create the other cells of the rows:
-  (1..COLUMN_TITLES.count-1).each do |column_index|
+  (1..column_count-1).each do |column_index|
     dest_wksh.add_cell(0, column_index, "")
     dest_wksh.add_cell(1, column_index, "")
   end
@@ -59,10 +59,11 @@ def add_total_row(dest_wksh)
   dest_wksh.add_cell((dest_wksh.count - 1), 4, '', "SUM(E2:E#{dest_wksh.count - 1 })")
   dest_wksh.add_cell((dest_wksh.count - 1), 5, '', "SUM(F2:F#{dest_wksh.count - 1 })")
   currency_cell = dest_wksh.sheet_data.rows[dest_wksh.count - 1].cells.last
+  currency_cell.datatype = RubyXL::DataType::NUMBER
   currency_cell.set_number_format('[$€-80C] #.00')
 end
 
-def style_row(dest_wksh, row_number, styles = {})
+def style_row(dest_wksh, row_number, column_count, styles = {})
   font = styles[:font] || 'Work Sans Light'
   font_size = styles[:font_size] || 12
   bold = styles[:bold] || false
@@ -78,22 +79,41 @@ def style_row(dest_wksh, row_number, styles = {})
   dest_wksh.change_row_horizontal_alignment(row_number, horizontal_align)
 
   if color
-    (0..COLUMN_TITLES.count-1).each do |column_index|
+    (0..column_count-1).each do |column_index|
       dest_wksh.sheet_data[row_number][column_index].change_fill(color)
     end
   end
 
   if wrap
-    (0..COLUMN_TITLES.count-1).each do |column_index|
+    (0..column_count-1).each do |column_index|
       dest_wksh.sheet_data[row_number][column_index].change_text_wrap(true)
     end
+  end
+end
+
+def style_cells(worksheet, column_count)
+  worksheet.count.times do |row|
+    style_row(worksheet, row, column_count, {horizontal_align: 'center'})
+  end
+end
+
+def style_title_rows(worksheet, column_count)
+  style_row(worksheet, 0, column_count, {font: 'Space Mono', bold: true, height:  30, color: '5c8fc1'})
+  style_row(worksheet, 1, column_count, {font: 'Space Mono', bold: true, color: '5c8fc1'})
+end
+
+def width_columns(worksheet, widths)
+  widths.each do |column, width|
+    worksheet.change_column_width(column, width)
   end
 end
 
 def create_coach_report(coach_name, dest_wksh, origin_wksh)
 
   # Adding title of worksheet and blank row
-  add_title(dest_wksh, coach_name)
+  title = "Relevé mensuel des heures pour #{coach_name}"
+  column_count = COLUMN_TITLES.count
+  add_title(dest_wksh, title, column_count)
 
   # Adding header row
   add_header_row(dest_wksh, origin_wksh)
@@ -105,23 +125,67 @@ def create_coach_report(coach_name, dest_wksh, origin_wksh)
   add_total_row(dest_wksh)
 
   # style of each cells
-  dest_wksh.count.times do |row|
-    style_row(dest_wksh, row, {horizontal_align: 'center'})
-  end
+  style_cells(dest_wksh, column_count)
 
   # style of title (first two) rows
-  style_row(dest_wksh, 0, {font: 'Space Mono', bold: true, height:  30, color: '5c8fc1'})
-  style_row(dest_wksh, 1, {font: 'Space Mono', bold: true, color: '5c8fc1'})
+  style_title_rows(dest_wksh, column_count)
 
   # style of header (third) row
-  style_row(dest_wksh, 3, { bold: true, height:  35, wrap: true, horizontal_align: 'center'})
+  style_row(dest_wksh, 3, column_count, { bold: true, height:  35, wrap: true, horizontal_align: 'center'})
 
   # style of TOTAL row
   last_row = dest_wksh.count - 1
-  style_row(dest_wksh, last_row, { bold: true, height:  30, color: 'b9cfe4', font: 'Space Mono', horizontal_align: 'center'})
+  style_row(dest_wksh, last_row, column_count, { bold: true, height:  30, color: 'b9cfe4', font: 'Space Mono', horizontal_align: 'center'})
 
   # width of columns
-  {0 => 12, 1 => 18, 2 => 10, 3 => 12, 4 => 9, 5 => 11}.each do |column, width|
-    dest_wksh.change_column_width(column, width)
+  widths = {0 => 12, 1 => 18, 2 => 10, 3 => 12, 4 => 9, 5 => 11}
+  width_columns(dest_wksh, widths)
+end
+
+def create_summary(coach_wkbk, coaches)
+  summary_wksh = coach_wkbk.worksheets[0]
+  column_count = 3
+  add_title(summary_wksh, "Monthly Summary", column_count)
+
+  # Month in French
+  next_row = summary_wksh.count
+  summary_wksh.add_cell(next_row, 0, "#{MONTHS_FR[DATE.month]} #{DATE.year}")
+
+  # Adding header row
+  next_row = summary_wksh.count
+  summary_wksh.add_cell(next_row, 0, "name")
+  summary_wksh.add_cell(next_row, 1, "hours")
+  summary_wksh.add_cell(next_row, 2, "fees")
+
+  # Add info
+  coaches.each do |coach_name|
+    coach_wksh = coach_wkbk["#{DATE.strftime("%Y-%m")}_#{coach_name}_relevé"]
+    summary_next_row = summary_wksh.count
+    coach_last_row = coach_wksh.count - 2
+
+    # name
+    summary_wksh.add_cell(summary_next_row, 0, coach_name)
+
+    # hours (UGLY FIX)
+    hours_column = COLUMN_TITLES.index("durée totale")
+    hours = (4..coach_last_row).map {|row_number| coach_wksh[row_number][hours_column].value }.sum
+
+    summary_wksh.add_cell(summary_next_row, 1, hours)
+
+    # fees (UGLY FIX)
+    fees_column = COLUMN_TITLES.index("total des frais")
+    fees = (4..coach_last_row).map {|row_number| coach_wksh[row_number][fees_column].value }.sum
+
+    summary_wksh.add_cell(summary_next_row, 2, fees)
+    currency_cell = summary_wksh[summary_next_row][2]
+    currency_cell.set_number_format('[$€-80C] #.00')
   end
+
+  style_cells(summary_wksh, column_count)
+  style_title_rows(summary_wksh, column_count)
+  style_row(summary_wksh, 4, column_count, { bold: true, height:  35, wrap: true, horizontal_align: 'center', color: 'b9cfe4'})
+
+  # width of columns
+  widths = {0 => 20, 1 => 15, 2 => 15}
+  width_columns(summary_wksh, widths)
 end
