@@ -60,7 +60,7 @@ def add_total_row(dest_wksh)
   dest_wksh.add_cell(dest_wksh.count, 0, 'TOTAL')
 
   # empty cells on columns "activité", "durée activité" and "durée préparation"
-    [1,2,3,6,7].each do |column_index|
+    [1,2,3].each do |column_index|
     dest_wksh.add_cell((dest_wksh.count - 1), column_index, "")
   end
 
@@ -70,7 +70,7 @@ def add_total_row(dest_wksh)
   # TOTAL cell sum of "compensation brute"
   dest_wksh.add_cell((dest_wksh.count - 1), 5, '', "SUM(F2:F#{dest_wksh.count - 1 })")
 
-  p currency_cell = dest_wksh.sheet_data.rows[dest_wksh.count - 1].cells.last
+  currency_cell = dest_wksh.sheet_data.rows[dest_wksh.count - 1].cells.last
   currency_cell.datatype = RubyXL::DataType::NUMBER
   currency_cell.set_number_format('[$€-80C] #.00')
 end
@@ -177,7 +177,6 @@ def create_summary(origin_wksh, coach_wkbk, coaches)
   summary_wksh.add_cell(next_row, 1, "hours")
   summary_wksh.add_cell(next_row, 2, "fees")
   summary_wksh.add_cell(next_row, 3, "month")
-  puts "adding regime"
   summary_wksh.add_cell(next_row, 4, "regime")
 
   # Add info
@@ -216,6 +215,6 @@ def create_summary(origin_wksh, coach_wkbk, coaches)
   style_row(summary_wksh, 0, column_count, { bold: true, height:  35, wrap: true, horizontal_align: 'center', color: 'b9cfe4'})
 
   # width of columns
-  widths = {0 => 20, 1 => 15, 2 => 15, 3 => 20, 4 => 15}
+  widths = {0 => 20, 1 => 15, 2 => 15, 3 => 20, 4 => 22}
   width_columns(summary_wksh, widths)
 end
