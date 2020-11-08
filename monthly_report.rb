@@ -44,20 +44,33 @@ def add_info_rows(coach_name, dest_wksh, origin_wksh)
       date_cell.set_number_format('yyyy/mm/dd')
 
       # change format of currency cells
-      currency_cell = dest_wksh.sheet_data.rows[dest_wksh.count - 1].cells.last
-      currency_cell.set_number_format('[$€-80C] ##.00')
+
+      currency_cells = CURRENCY_INDEXES.map do |index|
+        dest_wksh.sheet_data.rows[dest_wksh.count - 1].cells[index]
+      end
+
+      currency_cells.each do |cell|
+        cell.set_number_format('[$€-80C] ##.00')
+      end
     end
   end
 end
 
 def add_total_row(dest_wksh)
   dest_wksh.add_cell(dest_wksh.count, 0, 'TOTAL')
-  (1..3).each do |column_index|
+
+  # empty cells on columns "activité", "durée activité" and "durée préparation"
+    [1,2,3,6,7].each do |column_index|
     dest_wksh.add_cell((dest_wksh.count - 1), column_index, "")
   end
+
+  # TOTAL cell sum of durée totale
   dest_wksh.add_cell((dest_wksh.count - 1), 4, '', "SUM(E2:E#{dest_wksh.count - 1 })")
+
+  # TOTAL cell sum of "compensation brute"
   dest_wksh.add_cell((dest_wksh.count - 1), 5, '', "SUM(F2:F#{dest_wksh.count - 1 })")
-  currency_cell = dest_wksh.sheet_data.rows[dest_wksh.count - 1].cells.last
+
+  p currency_cell = dest_wksh.sheet_data.rows[dest_wksh.count - 1].cells.last
   currency_cell.datatype = RubyXL::DataType::NUMBER
   currency_cell.set_number_format('[$€-80C] #.00')
 end
@@ -150,13 +163,13 @@ def create_coach_report(coach_name, dest_wksh, origin_wksh)
   style_row(dest_wksh, last_row, column_count, { bold: true, height:  30, color: 'b9cfe4', font: 'Space Mono', horizontal_align: 'center'})
 
   # width of columns
-  widths = {0 => 12, 1 => 18, 2 => 10, 3 => 12, 4 => 9, 5 => 11}
+  widths = {0 => 12, 1 => 18, 2 => 10, 3 => 12, 4 => 9, 5 => 15}
   width_columns(dest_wksh, widths)
 end
 
-def create_summary(coach_wkbk, coaches)
+def create_summary(origin_wksh, coach_wkbk, coaches)
   summary_wksh = coach_wkbk.worksheets[0]
-  column_count = 4
+  column_count = 5
 
   # Adding header row
   next_row = summary_wksh.count
@@ -164,6 +177,8 @@ def create_summary(coach_wkbk, coaches)
   summary_wksh.add_cell(next_row, 1, "hours")
   summary_wksh.add_cell(next_row, 2, "fees")
   summary_wksh.add_cell(next_row, 3, "month")
+  puts "adding regime"
+  summary_wksh.add_cell(next_row, 4, "regime")
 
   # Add info
   coaches.each do |coach_name|
@@ -181,7 +196,7 @@ def create_summary(coach_wkbk, coaches)
     summary_wksh.add_cell(summary_next_row, 1, hours)
 
     # fees (UGLY FIX)
-    fees_column = COLUMN_TITLES.index("total des frais")
+    fees_column = COLUMN_TITLES.index("compensation brute")
     fees = (4..coach_last_row).map {|row_number| coach_wksh[row_number][fees_column].value }.sum
 
     summary_wksh.add_cell(summary_next_row, 2, fees)
@@ -190,12 +205,17 @@ def create_summary(coach_wkbk, coaches)
 
     # month
     summary_wksh.add_cell(summary_next_row, 3, "#{MONTHS_FR[DATE.month]} #{DATE.year}")
+
+    # regime
+    last_row_of_coach = origin_wksh.sheet_data.rows.select {|row| row[COACH_INDEX].value == coach_name && row[DATE_INDEX].value.month == DATE.month}.last
+    regime = last_row_of_coach[REGIME_INDEX].value
+    summary_wksh.add_cell(summary_next_row, 4, regime)
   end
 
   style_cells(summary_wksh, column_count)
   style_row(summary_wksh, 0, column_count, { bold: true, height:  35, wrap: true, horizontal_align: 'center', color: 'b9cfe4'})
 
   # width of columns
-  widths = {0 => 20, 1 => 15, 2 => 15, 3 => 20}
+  widths = {0 => 20, 1 => 15, 2 => 15, 3 => 20, 4 => 15}
   width_columns(summary_wksh, widths)
 end

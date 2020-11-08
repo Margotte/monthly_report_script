@@ -53,11 +53,18 @@ File.delete('#{Y_M_DATE}/#{Y_M_DATE}_coaches.xlsx') if File.exists? '#{Y_M_DATE}
 # ---------------------------------------------------
 
 ORIGIN_COLUMNS = list_columns(origin_wksh)
-COLUMN_TITLES = ["date", "activité", "durée activité", "durée préparation", "durée totale", "total des frais"]
+
+COLUMN_TITLES = ["date", "activité", "durée activité", "durée préparation", "durée totale",  "compensation brute"]
 COLUMN_INDEXES = COLUMN_TITLES.map { |title| ORIGIN_COLUMNS.index(title) }
+
 COACH_INDEX = ORIGIN_COLUMNS.index("animateur")
 DATE_INDEX = ORIGIN_COLUMNS.index("date")
+REGIME_INDEX = ORIGIN_COLUMNS.index("régime")
 
+CURRENCY_COLUMNS = ["compensation brute"]
+
+#  indexes in monthly report (not original ss)
+CURRENCY_INDEXES = CURRENCY_COLUMNS.map { |title| COLUMN_TITLES.index(title) }
 
 # ---------------------------------------------------
 # Create list of coaches active on given month
@@ -87,7 +94,7 @@ end
 # Create monthly summary
 # ---------------------------------------------------
 
-create_summary(coach_wkbk, coaches)
+create_summary(origin_wksh,coach_wkbk, coaches)
 
 # rename Sheet1
 summary_wksh = coach_wkbk.worksheets[0]
