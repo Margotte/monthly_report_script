@@ -215,6 +215,6 @@ def create_summary(origin_wksh, coach_wkbk, coaches)
   style_row(summary_wksh, 0, column_count, { bold: true, height:  35, wrap: true, horizontal_align: 'center', color: 'b9cfe4'})
 
   # width of columns
-  widths = {0 => 20, 1 => 15, 2 => 15, 3 => 20, 4 => 22}
+  widths = {0 => 22, 1 => 10, 2 => 12, 3 => 18, 4 => 22}
   width_columns(summary_wksh, widths)
 end

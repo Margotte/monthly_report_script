@@ -15,7 +15,7 @@ return unless answer == "y"
 # ---------------------------------------------------
 
 month = ARGV[0].to_i || 1 # default month is Jan
-year = 2020
+year = 2021
 DATE = Date.new(year, month, 1)
 Y_M_DATE = DATE.strftime("%Y-%m")
 MONTHS_FR = [nil, "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
@@ -25,7 +25,7 @@ MONTHS_FR = [nil, "janvier", "février", "mars", "avril", "mai", "juin", "juille
 # Info is centralized in one excel document
 # ---------------------------------------------------
 
-origin_wkbk = RubyXL::Parser.parse("../../#{year}_paiements.xlsx")
+origin_wkbk = RubyXL::Parser.parse("#{year}/#{year}_paiements.xlsx")
 origin_wksh = origin_wkbk.worksheets[0]
 
 
@@ -41,11 +41,11 @@ coach_wkbk = RubyXL::Workbook.new
 # ---------------------------------------------------
 # ::mkdir returns 0
 
-unless Dir.exist?("../#{Y_M_DATE}")
-  Dir.mkdir("../#{Y_M_DATE}")
+unless Dir.exist?("#{year}/monthly_report_coaches/#{Y_M_DATE}")
+  Dir.mkdir("#{year}/monthly_report_coaches/#{Y_M_DATE}")
 end
 
-File.delete('#{Y_M_DATE}/#{Y_M_DATE}_coaches.xlsx') if File.exists? '#{Y_M_DATE}/#{Y_M_DATE}_coaches.xlsx'
+File.delete('#{year}/monthly_report_coaches/#{Y_M_DATE}/#{Y_M_DATE}_coaches.xlsx') if File.exists? '#{year}/monthly_report_coaches/#{Y_M_DATE}/#{Y_M_DATE}_coaches.xlsx'
 
 
 # ---------------------------------------------------
