@@ -3,7 +3,7 @@ def list_columns(origin_wksh)
 end
 
 def add_title(dest_wksh, title, column_count)
-  dest_wksh.add_cell(0, 0, "#{Y_M_DATE} TECHIES LAB")
+  dest_wksh.add_cell(0, 0, "#{Y_M_DATE} TIC TAC LAB")
   dest_wksh.add_cell(dest_wksh.count, 0, title)
 
   # To be able to later on style the two first rows, create the other cells of the rows:
